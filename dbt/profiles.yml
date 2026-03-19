@@ -1,0 +1,11 @@
+cad_lakehouse:
+  target: dev
+  outputs:
+    dev:
+      type: spark
+      method: session
+      schema: gold
+      host: spark-master
+      port: 10000
+      connect_retries: 3
+      connect_timeout: 60

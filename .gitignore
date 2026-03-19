@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# Spark
+metastore_db/
+derby.log
+spark-warehouse/
+
+# Docker
+*.log
+
+# Data (keep test_part.step via git lfs or explicit include)
+# data/*.step

@@ -1,0 +1,54 @@
+version: 2
+
+sources:
+  - name: silver
+    description: "Silver layer: processed CAD metadata from Spark"
+    tables:
+      - name: cad_metadata
+        description: "CAD geometry data extracted from STEP files"
+        columns:
+          - name: filename
+            description: "Original STEP filename"
+          - name: volume
+            description: "Calculated volume of the CAD part"
+          - name: surface_area
+            description: "Calculated surface area of the CAD part"
+          - name: status
+            description: "Processing status (Success or error message)"
+
+models:
+  - name: stg_cad_metadata
+    description: "Cleaned and cast Silver layer CAD metadata"
+    columns:
+      - name: part_id
+        description: "Unique part identifier extracted from filename"
+        tests:
+          - unique
+          - not_null
+      - name: volume
+        description: "Volume of the part in cubic units"
+        tests:
+          - not_null
+      - name: surface_area
+        description: "Surface area of the part in square units"
+        tests:
+          - not_null
+
+  - name: fct_cad_parts
+    description: "Gold layer fact table with complexity scores and categorization"
+    columns:
+      - name: part_id
+        description: "Unique part identifier"
+        tests:
+          - unique
+          - not_null
+      - name: complexity_score
+        description: "Geometry complexity score from 1-10"
+        tests:
+          - not_null
+      - name: part_category
+        description: "Category: Fastener, Bracket, Housing, or Large Assembly"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Fastener', 'Bracket', 'Housing', 'Large Assembly']
