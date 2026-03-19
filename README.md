@@ -4,33 +4,7 @@ An end-to-end data engineering platform for CAD (Computer-Aided Design) data. Im
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    subgraph Sources
-        ABC[Raw CAD Data]
-    end
-
-    subgraph Bronze["Bronze (Raw)"]
-        MinIO_B[MinIO Bucket<br/>raw .step files]
-    end
-
-    subgraph Silver["Silver (Processed)"]
-        MinIO_S[MinIO Bucket<br/>cad_metadata.csv]
-    end
-
-    subgraph Gold["Gold (Analytics)"]
-        MinIO_G[MinIO Bucket<br/>Fact Tables]
-    end
-
-    ABC -->|Airflow DAG| MinIO_B
-    MinIO_B -->|Spark + pythonocc| MinIO_S
-    MinIO_S -->|dbt Models| MinIO_G
-    MinIO_G -->|Thrift / Postgres| Superset[Apache Superset]
-
-    subgraph Orchestration
-        Airflow[Apache Airflow]
-    end
-```
+![Architecture Diagram](architecture_flow.png)
 
 ## Tech Stack
 
@@ -110,6 +84,15 @@ When you're finished and want to safely spin down the platform and preserve your
 docker-compose down
 ```
 If you ever want to completely wipe all data and start fresh, run: `docker-compose down -v`
+
+## Architecture Decisions & Current Limitations
+
+To maintain a lightweight, local-first Docker architecture that can run reliably on standard hardware without relying on expensive cloud infrastructure or massive image sizes, the following design trade-offs were made:
+
+1. **Storage Formats**: Instead of heavy data lakehouse engines like **Delta Lake** or **Apache Iceberg**, the Silver layer utilizes standard **Apache Parquet**. This provides columnar compression without requiring hundreds of megabytes of external AWS-Delta Java JAR dependencies.
+2. **Gold Layer Materialization**: Because the Spark container is optimized to run without `hadoop-aws` connectors, `dbt` is configured to materialize the final analytical Gold tables natively inside the Spark SQL cluster (`spark-warehouse/` directory) rather than writing them back out to the MinIO cloud bucket.
+3. **Data Source Scope**: While the data consists of industry-standard `.step` files (like those originating from Autodesk BIM), the ingestion pipeline relies on the open-source "A Big CAD Model Dataset" (ABC) published by NYU to prioritize public accessibility without proprietary API keys.
+4. **Processing Scope**: The PySpark parser heavily utilizes `pythonocc` to dynamically calculate geometric attributes like 3D `volume` and `surface_area`. Advanced ML point-cloud derivations (e.g. sequence extraction) are currently scoped out.
 
 ---
 
